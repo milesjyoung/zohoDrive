@@ -243,6 +243,7 @@ exports.main = async (req, res) => {
 
     try {
 
+        //git makes no sense
         const params = new URLSearchParams(req.body);
         let zohoLeadID = params.get('zohoLeadID');
         let salesman = params.get('salesman');
