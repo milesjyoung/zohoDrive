@@ -18,18 +18,14 @@ let salesmen = {
 let listSalesman = ['Jim', 'Mark', 'Samanth'];
 let listName = ['Samantha Burgois', 'Kevin Lee', 'James Harden - Expansion', 'Sierra Bedoin exp', 'Cain valasquez', 'Ken Kesey', 'Amy Winehouse'];
 
-function generateRandomName() {
-    return listName[Math.floor((Math.random() * 6))];
-}
 
-function generateRandomSalesman() {
-    let sales = listSalesman[Math.floor((Math.random() * 3))];
+function getSalesmanFolder(salesman) {
     if(sales === 'Samantha') {
         return salesmen.Samantha;
     } else if(sales === 'Mark') {
         return salesmen.Mark;
     } else {
-        return salesmen.Jim;
+        return salesmen.Mark;
     }
 
 }
@@ -58,6 +54,17 @@ function searchName(driveService, parentFolder, clientName) {
         driveService.files.list({
             pageSize: 20,
             q: `'${parentFolder}' in parents and name='${clientName}'and mimeType='application/vnd.google-apps.folder' and trashed = false`, 
+            fields: 'files(id, name, mimeType)'
+        }).then(({data}) => resolve(data))
+        .catch(err => reject(err))
+    })
+}
+
+function searchFoundFolder(driveService, parentFolder) {
+    return new Promise((resolve, reject) => {
+        driveService.files.list({
+            pageSize: 20,
+            q: `'${parentFolder}' in parents and mimeType='application/vnd.google-apps.folder' and trashed = false`, 
             fields: 'files(id, name, mimeType)'
         }).then(({data}) => resolve(data))
         .catch(err => reject(err))
@@ -200,6 +207,14 @@ function setNameExpansionBeginningNoDash(clientName) {
     clientNameNew += ' - Expansion';
     return clientNameNew;
 }
+function clientNameSetWithoutExpansion(clientName) {
+    let clientNameArray = clientName.split(' ');
+    let clientNameNew = clientNameArray[0];
+    for(i=1; i < (clientNameArray.length-2); i++) {
+        clientNameNew += ` ${clientNameArray[i]}`;
+    }
+    return clientNameNew;
+}
 
 async function postData(zohoLeadID, root) {
     var form = new FormData();
@@ -211,15 +226,77 @@ async function postData(zohoLeadID, root) {
 
 // async function run() {
 //     try{
-//         //let salesman = generateRandomSalesman();
-//         //let CLIENT_NAME = generateRandomName();
+        
 //         let zohoLeadID = '5163559000000372030';
 //         const google = await authorize();
-//         //let clientName = setNameFinal(CLIENT_NAME);
-//         let clientName = 'Moan, Bimbim';
+//         let clientName = 'Pembert, Paddy';
 //         let salesman = salesmen.Mark;
 //         let folderQueryResult = await searchName(google, salesman, clientName);
-//         //console.log(`${CLIENT_NAME} at ${salesman}`);
+
+//         if(folderQueryResult.files.length <= 0) {
+//             if(clientName.includes('- Expansion')) {
+//                 console.log('we see it includes expansion');
+//                 let clientNameWithout = clientNameSetWithoutExpansion(clientName);
+//                 let folderQueryExpansion = await searchName(google, salesman, clientNameWithout);
+//                 console.log(clientNameWithout);
+//                 console.log(folderQueryExpansion.files);
+//                 if(folderQueryExpansion.files.length <= 0) {
+//                     let root = await createRoot(google, clientName, salesman);
+//                     //postData(zohoLeadID, root);
+//                     await recursive(google, START_SEARCH, root, clientName);
+//                 } else {
+//                     console.log('found the first install');
+//                     let finalSearch = await searchName(google, folderQueryExpansion.files[0].id, clientName);
+//                     if(finalSearch.files.length <= 0) {
+//                         let root = await createRoot(google, clientName, folderQueryExpansion.files[0].id);
+//                         //postData(zohoLeadID, root);
+//                         await recursive(google, START_SEARCH, root, clientName);
+//                     } else {
+//                         console.log('expansion folder exists within original install');
+//                     } 
+//                 }
+//             } else {
+//                 let root = await createRoot(google, clientName, salesman);
+//                 //postData(zohoLeadID, root);
+//                 await recursive(google, START_SEARCH, root, clientName);
+//             }
+
+//         } else {
+//             let folderStatus = await searchFoundFolder(google, folderQueryResult.files[0].id);
+//             if(folderStatus.files.length <= 0) {
+//                 let root = folderQueryResult.files[0].id;
+//                 //postData(zohoLeadID, root);
+//                 await recursive(google, START_SEARCH, root, clientName);
+//             } else {
+//                 console.log('searched existing folder for contents again');
+//                 let root = folderQueryResult.files[0].id;
+//                 //postData(zohoLeadID, root);
+//             }
+//         }
+
+//     } catch(err) {
+//         console.log('error', err);
+//     }
+// }
+
+// run();
+
+
+// exports.main = async (req, res) => {
+
+//     try {
+
+//         //git makes no sense
+//         const params = new URLSearchParams(req.body);
+//         let zohoLeadID = params.get('zohoLeadID');
+//         let salesmanName = params.get('salesman');
+//         let stringName = params.get('client');
+//         let salesman = getSalesmanFolder(salesmanName);
+//         let clientName = setNameFinal(stringName); 
+        
+//         const google = await authorize();
+//         let folderQueryResult = await searchName(google, salesman, clientName);
+        
 
 //         if(folderQueryResult.files.length <= 0) {
 //             let root = await createRoot(google, clientName, salesman);
@@ -230,46 +307,71 @@ async function postData(zohoLeadID, root) {
 //             let root = folderQueryResult.files[0].id;
 //             postData(zohoLeadID, root);
 //         }
+      
+//       res.status(200).send('Success');
 
-//     } catch(err) {
-//         console.log('error', err);
+//     } catch (err) {
+//       console.log(err);
+//       res.status(500).send('Failed...');
 //     }
-// }
 
-//run();
+// };
+
 
 
 exports.main = async (req, res) => {
 
     try {
 
-        //git makes no sense
         const params = new URLSearchParams(req.body);
         let zohoLeadID = params.get('zohoLeadID');
-        let salesman = params.get('salesman');
-        let stringName = params.get('Name');
-        console.log(`name: ${stringName}. zoho id: ${zohoLeadID}. salesman: ${salesman}.`);
-        //let salesman = generateRandomSalesman();
-        //let CLIENT_NAME = generateRandomName();
-        //let zohoLeadID = '5163559000000372030';
-        //const google = await authorize();
-        //let clientName = setNameFinal(CLIENT_NAME);
-        //let clientName = 'Moan, Bimbim';
-        //let salesman = salesmen.Mark;
-        //let folderQueryResult = await searchName(google, salesman, clientName);
-        //console.log(`${CLIENT_NAME} at ${salesman}`);
+        let salesmanName = params.get('salesman');
+        let stringName = params.get('client');
+        let salesman = getSalesmanFolder(salesmanName);
+        let clientName = setNameFinal(stringName); 
+        const google = await authorize();
+        let folderQueryResult = await searchName(google, salesman, clientName);
+        
+        if(folderQueryResult.files.length <= 0) {
+            if(clientName.includes('- Expansion')) {
+                console.log('we see it includes expansion');
+                let clientNameWithout = clientNameSetWithoutExpansion(clientName);
+                let folderQueryExpansion = await searchName(google, salesman, clientNameWithout);
+                console.log(clientNameWithout);
+                console.log(folderQueryExpansion.files);
+                if(folderQueryExpansion.files.length <= 0) {
+                    let root = await createRoot(google, clientName, salesman);
+                    postData(zohoLeadID, root);
+                    await recursive(google, START_SEARCH, root, clientName);
+                } else {
+                    let finalSearch = await searchName(google, folderQueryExpansion.files[0].id, clientName);
+                    if(finalSearch.files.length <= 0) {
+                        let root = await createRoot(google, clientName, folderQueryExpansion.files[0].id);
+                        postData(zohoLeadID, root);
+                        await recursive(google, START_SEARCH, root, clientName);
+                    } else {
+                        
+                    } 
+                }
+            } else {
+                let root = await createRoot(google, clientName, salesman);
+                postData(zohoLeadID, root);
+                await recursive(google, START_SEARCH, root, clientName);
+            }
 
-        // if(folderQueryResult.files.length <= 0) {
-        //     let root = await createRoot(google, clientName, salesman);
-        //     postData(zohoLeadID, root);
-        //     await recursive(google, START_SEARCH, root, clientName);
-
-        // } else {
-        //     let root = folderQueryResult.files[0].id;
-        //     postData(zohoLeadID, root);
-        // }
+        } else {
+            let folderStatus = await searchFoundFolder(google, folderQueryResult.files[0].id);
+            if(folderStatus.files.length <= 0) {
+                let root = folderQueryResult.files[0].id;
+                postData(zohoLeadID, root);
+                await recursive(google, START_SEARCH, root, clientName);
+            } else {
+                let root = folderQueryResult.files[0].id;
+                postData(zohoLeadID, root);
+            }
+        }
       
-      res.status(200).send('Success');
+        res.status(200).send('Success');
 
     } catch (err) {
       console.log(err);
@@ -277,4 +379,3 @@ exports.main = async (req, res) => {
     }
 
 };
-
