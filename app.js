@@ -2,30 +2,22 @@ const {google} = require('googleapis');
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 const axios = require('axios').default;
 const FormData = require('form-data');
-
-//Next step is to make a function to handle salesman folder assignment make functions to randomize possible client names and salesmen for further testing
-
-
-//START_SEARCH needs to be the make a copy client folder will work regardless of content changes
-const START_SEARCH = '1ejcKegCaKgsD-IKFx_Tnfq6F9_g73A_V';
-const zohoLeadID = '23525235235';
-let salesmen = {
+const salesmanFolders = {
     Jim: '18MNuOEyoqqXRNSki7RX7biWWVdSrcXv2',
     Mark: '1M6NUf-7m0lRfOtP_3ZuNtzA6KlzSjg37',
     Samantha: '1qEBWVWjh9rafF5YjP70VZSMzhoVBU5wJ'
 };
-
-let listSalesman = ['Jim', 'Mark', 'Samanth'];
-let listName = ['Samantha Burgois', 'Kevin Lee', 'James Harden - Expansion', 'Sierra Bedoin exp', 'Cain valasquez', 'Ken Kesey', 'Amy Winehouse'];
+//START_SEARCH needs to be the make a copy client folder will work regardless of content changes
+const START_SEARCH = '1ejcKegCaKgsD-IKFx_Tnfq6F9_g73A_V';
 
 
 function getSalesmanFolder(salesman) {
-    if(sales === 'Samantha') {
-        return salesmen.Samantha;
-    } else if(sales === 'Mark') {
-        return salesmen.Mark;
+    if(salesman === 'Samantha') {
+        return salesmanFolders.Samantha;
+    } else if(salesman === 'Mark') {
+        return salesmanFolders.Mark;
     } else {
-        return salesmen.Mark;
+        return salesmanFolders.Mark;
     }
 
 }
@@ -223,101 +215,6 @@ async function postData(zohoLeadID, root) {
         'https://www.zohoapis.com/crm/v2/functions/customer_drive_folder/actions/execute?auth_type=apikey&zapikey=1003.ade4315e8f897383a459d32564f2c9d8.188fdb7cf0de752fbe595de592e9db15', form, {headers: form.getHeaders()}
     );
 }
-
-// async function run() {
-//     try{
-        
-//         let zohoLeadID = '5163559000000372030';
-//         const google = await authorize();
-//         let clientName = 'Pembert, Paddy';
-//         let salesman = salesmen.Mark;
-//         let folderQueryResult = await searchName(google, salesman, clientName);
-
-//         if(folderQueryResult.files.length <= 0) {
-//             if(clientName.includes('- Expansion')) {
-//                 console.log('we see it includes expansion');
-//                 let clientNameWithout = clientNameSetWithoutExpansion(clientName);
-//                 let folderQueryExpansion = await searchName(google, salesman, clientNameWithout);
-//                 console.log(clientNameWithout);
-//                 console.log(folderQueryExpansion.files);
-//                 if(folderQueryExpansion.files.length <= 0) {
-//                     let root = await createRoot(google, clientName, salesman);
-//                     //postData(zohoLeadID, root);
-//                     await recursive(google, START_SEARCH, root, clientName);
-//                 } else {
-//                     console.log('found the first install');
-//                     let finalSearch = await searchName(google, folderQueryExpansion.files[0].id, clientName);
-//                     if(finalSearch.files.length <= 0) {
-//                         let root = await createRoot(google, clientName, folderQueryExpansion.files[0].id);
-//                         //postData(zohoLeadID, root);
-//                         await recursive(google, START_SEARCH, root, clientName);
-//                     } else {
-//                         console.log('expansion folder exists within original install');
-//                     } 
-//                 }
-//             } else {
-//                 let root = await createRoot(google, clientName, salesman);
-//                 //postData(zohoLeadID, root);
-//                 await recursive(google, START_SEARCH, root, clientName);
-//             }
-
-//         } else {
-//             let folderStatus = await searchFoundFolder(google, folderQueryResult.files[0].id);
-//             if(folderStatus.files.length <= 0) {
-//                 let root = folderQueryResult.files[0].id;
-//                 //postData(zohoLeadID, root);
-//                 await recursive(google, START_SEARCH, root, clientName);
-//             } else {
-//                 console.log('searched existing folder for contents again');
-//                 let root = folderQueryResult.files[0].id;
-//                 //postData(zohoLeadID, root);
-//             }
-//         }
-
-//     } catch(err) {
-//         console.log('error', err);
-//     }
-// }
-
-// run();
-
-
-// exports.main = async (req, res) => {
-
-//     try {
-
-//         //git makes no sense
-//         const params = new URLSearchParams(req.body);
-//         let zohoLeadID = params.get('zohoLeadID');
-//         let salesmanName = params.get('salesman');
-//         let stringName = params.get('client');
-//         let salesman = getSalesmanFolder(salesmanName);
-//         let clientName = setNameFinal(stringName); 
-        
-//         const google = await authorize();
-//         let folderQueryResult = await searchName(google, salesman, clientName);
-        
-
-//         if(folderQueryResult.files.length <= 0) {
-//             let root = await createRoot(google, clientName, salesman);
-//             postData(zohoLeadID, root);
-//             await recursive(google, START_SEARCH, root, clientName);
-
-//         } else {
-//             let root = folderQueryResult.files[0].id;
-//             postData(zohoLeadID, root);
-//         }
-      
-//       res.status(200).send('Success');
-
-//     } catch (err) {
-//       console.log(err);
-//       res.status(500).send('Failed...');
-//     }
-
-// };
-
-
 
 exports.main = async (req, res) => {
 
